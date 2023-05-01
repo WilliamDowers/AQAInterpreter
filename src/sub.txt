@@ -1,0 +1,14 @@
+SUBROUTINE mult(x, y)
+    RETURN x*y
+ENDSUBROUTINE
+
+a <- 1
+
+WHILE a < 100 DO
+    b <- 1
+    WHILE b < 100 DO
+        PRINT a*b
+        b <- b+1
+    ENDWHILE
+    a <- a+1
+ENDWHILE
