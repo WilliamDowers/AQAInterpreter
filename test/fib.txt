@@ -1,0 +1,9 @@
+a <-1
+b <-1
+tmp <-2
+FOR i <- 1 TO 15 DO
+    PRINT a
+    tmp <- b
+    b <- b+a
+    a <- tmp
+ENDFOR
