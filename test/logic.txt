@@ -1,0 +1,11 @@
+IF TRUE THEN
+	PRINT "true"
+ELSE
+	PRINT "not true"
+ENDIF
+
+IF FALSE THEN
+	PRINT "not true"
+ELSE
+	PRINT "true"
+ENDIF

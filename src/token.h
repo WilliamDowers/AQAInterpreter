@@ -35,10 +35,8 @@ public:
 
     TOKEN_TYPE GetType() const;
     int GetLine() const;
-
-    std::string GetLexeme();
-
-    friend std::ostream& operator<<(std::ostream& os, const Token& token);
+	std::string GetLexeme();
+	std::string GetTypeString();
 
 private:
     TOKEN_TYPE mType;

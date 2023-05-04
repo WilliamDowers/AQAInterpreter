@@ -8,6 +8,7 @@ class Function;
 
 #include "token.h"
 #include "lexer.h"
+#include "parserprinter.h"
 #include "nodes.h"
 #include "parser.h"
 #include "visitor.h"
@@ -34,7 +35,7 @@ int main(int argc, char** argv)
 
     for (Token token : vectors) {
         if (token.GetType() == (TOKEN_TYPE::SPACE)) { continue; }
-		std::cout<<static_cast<int>(token.GetType())<<" \t\t"<<token.GetLexeme()<<std::endl;
+		std::cout<<token.GetTypeString()<<" \t\t"<<token.GetLexeme()<<std::endl;
         if (token.GetType() == (TOKEN_TYPE::END_OF_FILE)) { break; }
     }
     std::cout<<"\n\n ### GENERATING ABSTRACT SYNTAX TREE ###\n"<<std::endl;

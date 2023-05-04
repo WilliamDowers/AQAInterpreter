@@ -25,7 +25,7 @@ Expression* BooleanLiteral::accept(Visitor* interpreter) { return interpreter->V
 
 
 
-StringLiteral::StringLiteral(const std::string& _val) { val = _val; }
+StringLiteral::StringLiteral(std::string _val) { val = _val; }
 Expression* StringLiteral::accept(Visitor* interpreter) { return interpreter->VisitStringLiteralExpression(this); }
 
 
@@ -170,4 +170,13 @@ ForStatement::ForStatement(Token it, Expression* begin, Expression* finish, Stat
 Statement* ForStatement::accept(Visitor* interpreter) {
     interpreter->VisitForStatement(this);
     return nullptr;
+}
+
+
+InputExpression::InputExpression() {
+
+}
+
+Expression* InputExpression::accept(Visitor* interpreter) {
+	return interpreter->VisitInputExpression(this);
 }

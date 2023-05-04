@@ -10,13 +10,16 @@ class Expression;
 class Visitor;
 class Interpreter;
 
+
 #include "token.h"
 #include "nodes.h"
+#include "parserprinter.h"
 #include "parser.h"
 
 Parser::Parser(std::vector<Token>& tokens) {
     mTokens = tokens;
     mCurrent = 0;
+	printer.setSource(tokens);
 }
 
 std::vector<Statement*> Parser::Parse() {
@@ -25,11 +28,12 @@ std::vector<Statement*> Parser::Parse() {
         statements.push_back(declaration());
         enforce(TOKEN_TYPE::NEWLINE);
     }
+	enforce(TOKEN_TYPE::END_OF_FILE);
     return statements;
 }
 
 Statement* Parser::declaration() {
-    if (peek().GetType() == TOKEN_TYPE::SUBROUTINE) {
+    if (match(TOKEN_TYPE::SUBROUTINE)) {
         return functionDeclaration();
     }
     if (peek().GetType() == TOKEN_TYPE::IDENTIFIER && mTokens[mCurrent+1].GetType() == TOKEN_TYPE::ASSIGNMENT) {
@@ -46,13 +50,12 @@ Statement* Parser::variableDeclaration() {
 }
 
 Statement* Parser::functionDeclaration() {
-    advance();
     Token identifier = get();
     enforce(TOKEN_TYPE::LEFT_PAREN);
     std::vector<Token> parameters;
     while (peek().GetType() != TOKEN_TYPE::RIGHT_PAREN) {
         if (parameters.size() > 127) {
-            // throw an error, cannot have more than 127 params
+            throw std::runtime_error("Cannot have more than 127 arguments in function call\n"+identifier.GetLexeme());
         }
         Token param = get();
         parameters.push_back(param);
@@ -72,37 +75,29 @@ Statement* Parser::returnStatement() {
     if (peek().GetType() != TOKEN_TYPE::NEWLINE) {
         expr = expression();
     }
+	
+	
     return new ReturnStatement(expr);
 }
 
 Statement* Parser::statement() {
-    while (peek().GetType() == TOKEN_TYPE::NEWLINE) {
-        advance();
-    }
-    if (peek().GetType() == TOKEN_TYPE::IF) {
-        advance();
+	while (match(TOKEN_TYPE::NEWLINE)) {
+		continue;
+	}
+    if (match(TOKEN_TYPE::IF)) {
         return ifStatement();
     }
-    if (peek().GetType() == TOKEN_TYPE::WHILE) {
-        advance();
+    if (match(TOKEN_TYPE::WHILE)) {
         return whileStatement();
     }
-    if (peek().GetType() == TOKEN_TYPE::PRINT) {
-        advance();
+    if (match(TOKEN_TYPE::PRINT)) {
         return printStatement();
     }
-    if (peek().GetType() == TOKEN_TYPE::RETURN) {
-        advance();
+    if (match(TOKEN_TYPE::RETURN)) {
         return returnStatement();
     }
-    /*if (peek().GetType() == TOKEN_TYPE::FOR) {
-        advance();
+    if (match(TOKEN_TYPE::FOR)) {
         return forStatement();
-    }*/
-    if (peek().GetType() == TOKEN_TYPE::LEFT_BRACE) {
-        advance(); advance();
-        Statement* stmt = blockStatement(TOKEN_TYPE::RIGHT_BRACE);
-        return stmt;
     }
     return expressionStatement();
 } 
@@ -113,20 +108,21 @@ Statement* Parser::ifStatement() {
     enforce(TOKEN_TYPE::NEWLINE);
     
     std::vector<Statement*> branch;
-    while ((peek().GetType() != TOKEN_TYPE::ELSE || peek().GetType() != TOKEN_TYPE::ENDIF) && !eof()) {
+    while ((peek().GetType() != TOKEN_TYPE::ELSE && peek().GetType() != TOKEN_TYPE::ENDIF) && !eof()) {
         branch.push_back(declaration());
-        if (mTokens[mCurrent+1].GetType() != TOKEN_TYPE::END_OF_FILE) {
-            enforce(TOKEN_TYPE::NEWLINE);
-        }
+        enforce(TOKEN_TYPE::NEWLINE);
     }
 
-    Statement* elseBranch = nullptr;
-    if (peek().GetType() == TOKEN_TYPE::ELSE) {
-        advance();
-        elseBranch = blockStatement(TOKEN_TYPE::ENDIF);
+    std::vector<Statement*> elseBranch;
+    if (match(TOKEN_TYPE::ELSE)) {
+		while(peek().GetType() != TOKEN_TYPE::ENDIF && !eof()) {
+			branch.push_back(declaration());
+			enforce(TOKEN_TYPE::NEWLINE);
+		}
     }
-    if (!eof()) { enforce(TOKEN_TYPE::NEWLINE); }
-    return new IfStatement(condition, new BlockStatement(branch), elseBranch);
+	match(TOKEN_TYPE::ENDIF);
+	
+    return new IfStatement(condition, new BlockStatement(branch), new BlockStatement(elseBranch));
 }
 
 Statement* Parser::whileStatement() {
@@ -134,7 +130,6 @@ Statement* Parser::whileStatement() {
     enforce(TOKEN_TYPE::DO);
     enforce(TOKEN_TYPE::NEWLINE);
     Statement* body = blockStatement(TOKEN_TYPE::ENDWHILE);
-    if (!eof()) { enforce(TOKEN_TYPE::NEWLINE); }
     return new WhileStatement(condition, body);
 }
 
@@ -147,6 +142,7 @@ Statement* Parser::forStatement() {
     enforce(TOKEN_TYPE::DO);
     enforce(TOKEN_TYPE::NEWLINE);
     Statement* body = blockStatement(TOKEN_TYPE::ENDFOR);
+	enforce(TOKEN_TYPE::NEWLINE);
     return new ForStatement(identifier, from, to, body);
 }
 
@@ -167,9 +163,7 @@ Statement* Parser::blockStatement(TOKEN_TYPE endingToken) {
     std::vector<Statement*> stmts;
     while (peek().GetType() != endingToken && !eof()) {
         stmts.push_back(declaration());
-        if (mTokens[mCurrent+1].GetType() != TOKEN_TYPE::END_OF_FILE) {
-            enforce(TOKEN_TYPE::NEWLINE);
-        }
+		enforce(TOKEN_TYPE::NEWLINE);
     }
     enforce(endingToken);
     return new BlockStatement(stmts);
@@ -183,6 +177,7 @@ Statement* Parser::printStatement() {
 
 Statement* Parser::expressionStatement() {
     Expression* expr = expression();
+	enforce(TOKEN_TYPE::NEWLINE);
     return expr;
 }   
 
@@ -299,9 +294,11 @@ Expression* Parser::finishCall(Expression* callee) {
 }
 
 Expression* Parser::primary() {
-    std::cout<<static_cast<int>(peek().GetType())<<std::endl;
     switch (peek().GetType())
     {
+	case TOKEN_TYPE::INPUT:
+		advance();
+		return new InputExpression();
     case TOKEN_TYPE::FALSE:
         advance();
         return new BooleanLiteral(false);
@@ -328,20 +325,33 @@ Expression* Parser::primary() {
 Token Parser::previous() { return mTokens[mCurrent-1]; }
 Token Parser::get() { 
     if (!eof()) {
-        mCurrent++;
+        advance();
+		printer.Print(mCurrent);
         return previous();  
     }
+	printer.Print(mCurrent);
     return Token(TOKEN_TYPE::END_OF_FILE);
 //    std::cout<<static_cast<int>(mTokens[mCurrent].GetType())<<std::endl;
 }
-Token Parser::peek() { return mTokens[mCurrent]; }
-void Parser::advance() { mCurrent++; }
-void Parser::enforce(Token token) {
 
+bool Parser::match(TOKEN_TYPE type) {
+	if (peek().GetType() == type) {
+		advance();
+		return true;
+	}
+	return false;
+}
+Token Parser::peek() { return mTokens[mCurrent]; }
+void Parser::advance() { mCurrent++; printer.Print(mCurrent); }
+
+void Parser::enforce(Token token) {
     if (mTokens[mCurrent].GetType() != token.GetType()) {
-        std::cout<<"Syntax Error: Expected: "<<static_cast<int>(token.GetType())<<std::endl;
+		if (token.GetType() == TOKEN_TYPE::NEWLINE && mTokens[mCurrent].GetType() == TOKEN_TYPE::END_OF_FILE) { return; }
+        std::cout<<"Syntax Error: Expected: "<<token.GetTypeString()<< " but got: "<< mTokens[mCurrent].GetTypeString()<< " instead"<<std::endl;
+		std::cout<<"\tline: "<<mTokens[mCurrent].GetLine()<<std::endl;
+		throw std::runtime_error("Quitting...");
     }
-    advance();
+	advance();
 }
 bool Parser::eof() { 
     if (mCurrent >= mTokens.size()-1) { return true; }

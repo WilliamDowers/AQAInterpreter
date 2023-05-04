@@ -20,6 +20,8 @@ public:
     Expression* VisitVariableExpression(VariableExpression* variableExpression) override;
     Expression* VisitVariableAssignmentExpression(VariableAssignmentExpression* variableAssignmentExpression) override;
 
+	Expression* VisitInputExpression(InputExpression* inputExpression) override;
+
     void VisitExpressionStatement(ExpressionStatement* expressionStatement) override;
     void VisitPrintStatement(PrintStatement* printStatement) override;
     void VisitVariableDeclarationStatement(VariableDeclarationStatement* variableDeclarationStatement) override;

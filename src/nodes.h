@@ -17,6 +17,8 @@ public:
     Expression* expr;
 };
 
+
+
 class ExpressionStatement : public Statement {
 public:
     ExpressionStatement(Expression* expression);
@@ -110,7 +112,7 @@ public:
 
 class StringLiteral : public Expression {
 public:
-    StringLiteral(const std::string& _val);
+    StringLiteral(std::string _val);
     Expression* accept(Visitor* interpreter) override;
     std::string val;
 };
@@ -173,6 +175,15 @@ public:
     Expression* accept(Visitor* interpreter) override;
 
     Token name;
+};
+
+class InputExpression : public Expression {
+public:
+	InputExpression();
+
+	Expression* accept(Visitor* Interpreter) override;
+
+	
 };
 
 class VariableAssignmentExpression : public Expression {

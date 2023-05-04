@@ -23,10 +23,10 @@ Lexer::~Lexer() {
 
 
 Token Lexer::GetNextToken() {
-    if (mSrc.eof()) { return Token(line, TOKEN_TYPE::END_OF_FILE); }
     
     switch(mSrc.get()) {
         case ' ': return GetNextToken();
+		case '\t': return GetNextToken();
         case '(': return Token(line, TOKEN_TYPE::LEFT_PAREN);
         case ')': return Token(line, TOKEN_TYPE::RIGHT_PAREN);
         case '{': return Token(line, TOKEN_TYPE::LEFT_BRACE);
@@ -96,7 +96,6 @@ Token Lexer::GetNextToken() {
                 if (mKeyWords.contains(lexeme))	{ return Token(mKeyWords[lexeme]); }
                 return Token(line, TOKEN_TYPE::IDENTIFIER, lexeme);
             }
-            return Token(line, TOKEN_TYPE::END_OF_FILE);
     };
     
 }
@@ -104,11 +103,10 @@ Token Lexer::GetNextToken() {
 
 
 void Lexer::GetAllTokens(std::vector<Token>& tokens) {
-    while (!mSrc.eof() && !mSrc.fail() )
+    while (mSrc.good())
         tokens.push_back(GetNextToken());
-    if (tokens.back().GetType() != TOKEN_TYPE::END_OF_FILE) { 
-        tokens.push_back(TOKEN_TYPE::END_OF_FILE);
-    }
+	
+	tokens.push_back(Token(line, TOKEN_TYPE::END_OF_FILE));
 }
 
 void Lexer::InitKeyWords() {

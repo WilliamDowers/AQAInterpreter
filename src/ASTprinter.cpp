@@ -84,6 +84,10 @@ Expression* Printer::print(Expression* expr) {
     return expr->accept(this);
 }
 
+Expression* Printer::VisitInputExpression(InputExpression* expr) {
+	return nullptr;
+}
+
 Expression* Printer::VisitVariableExpression(VariableExpression* expression) { return nullptr; }
 
 void Printer::VisitPrintStatement(PrintStatement* printStatement) { return; }

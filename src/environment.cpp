@@ -1,6 +1,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <stdexcept>
 
 class Function;
 class Expression;
@@ -86,7 +87,7 @@ bool Environment::Assign(std::string name, double val) {
     if (parent != nullptr) {
         parent->Assign(name, val);
     }
-    //throw an error
+    
 }
 
 bool Environment::Assign(std::string name, bool val) {
@@ -97,7 +98,7 @@ bool Environment::Assign(std::string name, bool val) {
     if (parent != nullptr) {
         return parent->Assign(name, val);
     }
-    //throw an error
+    
 }
 
 bool Environment::Assign(std::string name, std::string val) {
@@ -108,7 +109,7 @@ bool Environment::Assign(std::string name, std::string val) {
     if (parent != nullptr) {
         return parent->Assign(name, val);
     }
-    //throw an error
+    
 }
 
 bool Environment::Assign(std::string name, Function* fun) {
@@ -129,5 +130,5 @@ Value Environment::Get(std::string name)  {
         if (parent != nullptr) {
             return parent->Get(name);
         }
-        //throw a runtime error
+        throw std::runtime_error('\''+name+'\''+" does not exist");
     }

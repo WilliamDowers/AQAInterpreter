@@ -1,0 +1,13 @@
+c <- 1
+SUBROUTINE POW(base, exp)
+	c <-1
+	WHILE exp > 0 DO
+		c <- base * c
+		exp <- exp -1
+	ENDWHILE
+	RETURN c
+ENDSUBROUTINE
+
+FOR i <- 0 TO 20 DO
+	PRINT POW(2, i)
+ENDFOR

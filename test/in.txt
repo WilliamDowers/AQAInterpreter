@@ -1,0 +1,2 @@
+PRINT "enter your name:"
+PRINT "hello, "+INPUT

@@ -16,6 +16,8 @@ public:
     virtual Expression* VisitVariableExpression(VariableExpression* variableExpression) = 0;
     virtual Expression* VisitVariableAssignmentExpression(VariableAssignmentExpression* variableAssignmentExpression) = 0;
 
+	virtual Expression* VisitInputExpression(InputExpression* inputExpression) = 0;
+
     virtual void VisitExpressionStatement(ExpressionStatement* expressionStatement) = 0;
     virtual void VisitPrintStatement(PrintStatement* printStatement) = 0;
     virtual void VisitVariableDeclarationStatement(VariableDeclarationStatement* variableStatement) = 0;

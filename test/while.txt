@@ -1,0 +1,5 @@
+i <- 0
+WHILE i < 10 DO
+    PRINT i
+    i <- i+1
+ENDWHILE

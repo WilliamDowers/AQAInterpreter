@@ -52,9 +52,9 @@ Expression* Interpreter::VisitUnaryExpression(UnaryExpression* unaryExpression) 
     return new NumericLiteral(((NumericLiteral*)right)->val);
 }
 
- // I dont have a fucking clue what this function actually does anymore but it works so leave it alone 
 Expression* Interpreter::VisitCallExpression(CallExpression* callExpression) {
-    Expression* callee = evaluate(callExpression->callee); // DO NOT DEREFERENCE USES DIRTY HACK TO WORK AROUND MY POORLY DESIGNED SYSTEM
+    Expression* callee = evaluate(callExpression->callee); 
+
 
     std::vector<Expression*> arguments;
     for (Expression* arg : callExpression->args) {
@@ -68,6 +68,8 @@ Expression* Interpreter::VisitCallExpression(CallExpression* callExpression) {
 
 
     Function* subroutine = reinterpret_cast<Function*>(callee);
+
+	
 
     if (arguments.size() != subroutine->Arity()) {
         throw std::runtime_error("Expected " + std::to_string(subroutine->Arity()) + " arguments but " + std::to_string(arguments.size()) + " were given");
@@ -129,6 +131,12 @@ Expression* Interpreter::VisitBinaryExpression(BinaryExpression* binaryExpressio
     }
 }
 
+Expression* Interpreter::VisitInputExpression(InputExpression* inputExpression) {
+	std::string input;
+	std::getline(std::cin, input);
+	return new StringLiteral(input);
+}
+
 void Interpreter::VisitBlockStatement(BlockStatement* blockStatement) {
     executeBlock(blockStatement->statements, new Environment(environment));
 }
@@ -159,7 +167,7 @@ Expression* Interpreter::VisitVariableAssignmentExpression(VariableAssignmentExp
         environment->Assign(variableAssignmentExpression->name.GetLexeme(), dynamic_cast<BooleanLiteral*>(value)->val);
     }
     else {
-        //report a runtime error
+        throw std::runtime_error("Unable to assign to "+variableAssignmentExpression->name.GetLexeme());
     }
     return value;
 }
@@ -220,7 +228,7 @@ void Interpreter::VisitWhileStatement(WhileStatement* whileStatement) {
 }
 
 void Interpreter::VisitForStatement(ForStatement* forStatement) {
-    Environment* previous = environment;
+    Environment* current = environment;
     environment = new Environment(environment);
     environment->Declare(forStatement->iterator.GetLexeme(), dynamic_cast<NumericLiteral*>(evaluate(forStatement->start))->val);
     while(environment->Get(forStatement->iterator.GetLexeme()).literal.number < dynamic_cast<NumericLiteral*>((forStatement->end))->val) {
@@ -228,7 +236,7 @@ void Interpreter::VisitForStatement(ForStatement* forStatement) {
         environment->Assign(forStatement->iterator.GetLexeme(), environment->Get(forStatement->iterator.GetLexeme()).literal.number+1);
     }
     delete environment;
-    environment = previous;
+    environment = current;
 }
 
 Expression* Interpreter::evaluate(Expression* expr) { 

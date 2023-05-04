@@ -15,6 +15,7 @@ private:
     Expression* call();
     Expression* finishCall(Expression* callee);
     Expression* primary();
+	Expression* input();
 
     Statement* declaration();
     Statement* statement();
@@ -31,6 +32,7 @@ private:
     Token previous();
     Token get();
     Token peek();
+	bool match(TOKEN_TYPE type);
     void advance();
 
     void enforce(Token token);
@@ -38,4 +40,5 @@ private:
     bool end_of_file;
     std::vector<Token> mTokens;
     int mCurrent;
+	ParserPrinter printer;
 };

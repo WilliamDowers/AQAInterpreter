@@ -1,0 +1,11 @@
+SUBROUTINE pow(base, exp)
+    result <-1
+    WHILE exp > 0 DO
+        result <- result * base
+        exp <- exp -1
+    ENDWHILE
+    RETURN result
+ENDSUBROUTINE
+
+
+PRINT pow(2, 5)
